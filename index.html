@@ -209,10 +209,11 @@ window.dash = (function () {
       <span class="cb-tile-sub" id="unload-line">Average unloading time: <span class="cb-num" data-source="unloading_kpi" data-field="avg_unloading_minutes" data-row="0">—</span> mins</span>
     </div>
     <div class="cb-tile">
-      <span class="cb-tile-label">Closing book stock on <span data-source="summary" data-field="last_date_label" data-row="0">—</span> · bottles</span>
+      <span class="cb-tile-label"><span id="tile-stock-kind">Closing book stock</span> on <span data-source="summary" data-field="stock_date_label" data-row="0">—</span> · bottles</span>
       <span class="cb-tile-val dash-skeleton" data-source="summary" data-field="closing_stock" data-row="0">—</span>
       <span class="cb-tile-sub" id="tile-stock-sub">Opening <span class="cb-num" data-source="summary" data-field="opening_stock" data-row="0">—</span> on <span data-source="summary" data-field="first_date_label" data-row="0">—</span></span>
       <span class="cb-pending" id="tile-stock-pending" hidden>Waiting for the opening stock count</span>
+      <span class="cb-tile-sub" id="tile-stock-count" hidden>Physical count by IB and the brewery · Book figure to <span data-source="summary" data-field="book_date_label" data-row="0">—</span>: <span class="cb-num" data-source="summary" data-field="book_closing_stock" data-row="0">—</span></span>
     </div>
     <div class="cb-tile">
       <span class="cb-tile-label">Cullet lifted · <span data-source="summary" data-field="range_label" data-row="0">—</span> · kg</span>
@@ -252,13 +253,16 @@ window.dash = (function () {
     <div class="cb-grid">
       <div class="cb-card">
         <h3 class="cb-card-title">Bottle stock at the warehouse</h3>
-        <p class="cb-card-note">Closing stock = opening stock at the start of the month + usable inwarded bottles − bottles supplied on pallets. It includes other-brand and dirty bottles awaiting sorting. This is a book figure: breakage and cullet are not deducted, so a physical count will come in lower.</p>
+        <p class="cb-card-note">Book stock = opening stock at the start of the month + usable inwarded bottles − bottles supplied on pallets. It includes other-brand and dirty bottles awaiting sorting. Breakage and cullet are not deducted, so a physical count comes in lower. Where a physical count has been taken jointly with the brewery, the closing stock shown is that count.</p>
         <div class="cb-bridge">
           <div class="cb-step"><span class="cb-step-op">Opening stock, <span data-source="summary" data-field="first_date_label" data-row="0">—</span></span><span class="cb-step-val dash-skeleton" data-source="summary" data-field="opening_stock" data-row="0">—</span><span class="cb-step-op">Usable <span data-source="opening_stock" data-field="usable" data-row="0">—</span> · Dirty <span data-source="opening_stock" data-field="dirty" data-row="0">—</span> · Others <span data-source="opening_stock" data-field="others_total" data-row="0">—</span></span></div>
           <div class="cb-step"><span class="cb-step-op">+ Usable inwarded</span><span class="cb-step-val dash-skeleton" data-source="summary" data-field="bottles_inwarded_mtd" data-row="0">—</span></div>
           <div class="cb-step"><span class="cb-step-op">− Supplied on pallets</span><span class="cb-step-val dash-skeleton" data-source="summary" data-field="bottles_on_pallets_mtd" data-row="0">—</span></div>
-          <div class="cb-step cb-step-total"><span class="cb-step-op">= Closing stock</span><span class="cb-step-val dash-skeleton" data-source="summary" data-field="closing_stock" data-row="0">—</span></div>
+          <div class="cb-step cb-step-total"><span class="cb-step-op">= Closing book stock, <span data-source="summary" data-field="book_date_label" data-row="0">—</span></span><span class="cb-step-val dash-skeleton" data-source="summary" data-field="book_closing_stock" data-row="0">—</span></div>
+          <div class="cb-step cb-step-total" id="count-step" hidden><span class="cb-step-op">Physical closing count, <span data-source="summary" data-field="count_date_label" data-row="0">—</span></span><span class="cb-step-val" data-source="summary" data-field="count_stock" data-row="0">—</span><span class="cb-step-op">Usable <span data-source="summary" data-field="count_usable" data-row="0">—</span> · Dirty <span data-source="summary" data-field="count_dirty" data-row="0">—</span> · Others <span data-source="summary" data-field="count_others" data-row="0">—</span> · On <span data-source="summary" data-field="count_pallets" data-row="0">—</span> pallets awaiting dispatch <span data-source="summary" data-field="count_on_pallets" data-row="0">—</span></span></div>
         </div>
+        <p class="cb-card-note" id="count-variance" hidden>Physical count vs book stock on <span data-source="summary" data-field="count_date_label" data-row="0">—</span>: <span class="cb-num" data-source="summary" data-field="count_variance" data-row="0">—</span> bottles (breakage, cullet and counting differences).</p>
+        <p class="cb-card-note" id="count-pending" hidden>The book figure runs to <span data-source="summary" data-field="book_date_label" data-row="0">—</span>, the latest daily production report; the comparison with the <span data-source="summary" data-field="count_date_label" data-row="0">—</span> count appears once that day’s report arrives.</p>
         <p class="cb-card-note">Net stock build this month: <span class="cb-num" data-source="summary" data-field="net_stock_change" data-row="0">—</span> bottles. <span class="cb-pending" id="bridge-pending" hidden>Opening and closing figures appear once the month’s opening count is added.</span></p>
       </div>
       <div class="cb-card">
@@ -298,7 +302,7 @@ window.dash = (function () {
 dash.calc('summary', {
   inputs: ['daily', 'opening_stock'],
   title: 'Month-to-date totals',
-  description: 'Totals over the daily site reports for the month shown. The opening stock applies only when its date is in that month. Bottles on pallets = pallets × 1,575 (7-layer pallet). Closing stock = opening + usable inwarded bottles − bottles on pallets.',
+  description: 'Totals over the daily site reports for the month shown. The opening stock applies only when its date is in that month. Bottles on pallets = pallets × 1,575 (7-layer pallet). Book stock = opening + usable inwarded bottles − bottles on pallets (DPR days). Closing stock = the physical count (rows with count_type closing in the stock counts) when one was taken that month, otherwise the book stock. Count vs book is shown only when the DPR runs to the count date.',
   fn: (daily, opening_stock) => {
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const ord = (n) => n + ((n % 100 >= 11 && n % 100 <= 13) ? 'th' : (['th', 'st', 'nd', 'rd'][n % 10] || 'th'));
@@ -318,6 +322,12 @@ dash.calc('summary', {
     const o = sameMonth ? os.opening_stock_bottles : null;
     const opening = o === null || o === undefined || o === '' ? null : +o;
     const onPallets = pallets * 1575;
+    const dprRows = daily.filter((x) => !x.provisional).map((x) => ({ date: String(x.date).slice(0, 10), p: +x.pallets_dispatched || 0 })).sort((a, b) => (a.date < b.date ? -1 : 1));
+    const dLastDate = dprRows.length ? dprRows[dprRows.length - 1].date : first.date;
+    const dprOnPallets = dprRows.reduce((s, x) => s + x.p, 0) * 1575;
+    const cc = opening_stock.find((x) => x && x.count_type === 'closing' && String(x.count_date || '').slice(0, 7) === first.date.slice(0, 7) && x.closing_stock_bottles !== null && x.closing_stock_bottles !== undefined && x.closing_stock_bottles !== '');
+    const book = opening === null ? null : opening + inward - dprOnPallets;
+    const ccDate = cc ? String(cc.count_date).slice(0, 10) : null;
     return [{
       month_label: `${fullMonths[+first.date.slice(5, 7) - 1]} ${first.date.slice(0, 4)}`,
       range_label: `${+first.date.slice(8, 10)}–${label(last.date)}`,
@@ -337,7 +347,19 @@ dash.calc('summary', {
       bottles_on_pallets_mtd: onPallets,
       net_stock_change: inward - onPallets,
       opening_stock: opening,
-      closing_stock: opening === null ? null : opening + inward - onPallets,
+      closing_stock: cc ? +cc.closing_stock_bottles : book,
+      book_closing_stock: book,
+      book_date_label: label(dLastDate),
+      has_count: !!cc,
+      count_date_label: cc ? label(ccDate) : null,
+      count_stock: cc ? +cc.closing_stock_bottles : null,
+      count_usable: cc ? +cc.usable : null,
+      count_dirty: cc ? +cc.dirty : null,
+      count_others: cc ? +cc.others_total : null,
+      count_pallets: cc ? +cc.pallets_ready : null,
+      count_on_pallets: cc ? +cc.bottles_on_ready_pallets : null,
+      count_variance: cc && book !== null && dLastDate === ccDate ? +cc.closing_stock_bottles - book : null,
+      stock_date_label: cc ? label(ccDate) : label(dLastDate),
       cullet_kg_mtd: rows.reduce((s, r) => s + r.c, 0)
     }];
   }
@@ -401,10 +423,14 @@ dash.calc('daily_running', {
     const o = sameMonth ? os.opening_stock_bottles : null;
     let stock = o === null || o === undefined || o === '' ? null : +o;
     let mtd = 0;
+    const counts = new Map(opening_stock.filter((x) => x && x.count_type === 'closing' && x.closing_stock_bottles !== null && x.closing_stock_bottles !== undefined && x.closing_stock_bottles !== '').map((x) => [String(x.count_date).slice(0, 10), +x.closing_stock_bottles]));
+    const prov = new Set(daily.filter((x) => x.provisional).map((x) => String(x.date).slice(0, 10)));
     return rows
       .map((r) => {
         const out = r.p * 1575;
         mtd += r.p;
+        if (counts.has(r.date)) { stock = counts.get(r.date); return { date: r.date, pallets_mtd: mtd, bottles_on_pallets: out, closing_stock: stock }; }
+        if (prov.has(r.date)) return { date: r.date, pallets_mtd: mtd, bottles_on_pallets: out, closing_stock: null };
         stock = stock === null ? null : stock + r.b - out;
         return { date: r.date, pallets_mtd: mtd, bottles_on_pallets: out, closing_stock: stock };
       });
@@ -602,6 +628,13 @@ dash.calc('daily_running', {
     document.getElementById('tile-stock-pending').hidden = !pendingStock;
     document.getElementById('tile-stock-sub').hidden = pendingStock;
     document.getElementById('bridge-pending').hidden = !pendingStock;
+    const hasCount = !!sum && !!sum.has_count;
+    document.getElementById('tile-stock-kind').textContent = hasCount ? 'Closing stock (physical count)' : 'Closing book stock';
+    document.getElementById('tile-stock-count').hidden = !hasCount;
+    if (hasCount) document.getElementById('tile-stock-sub').hidden = true;
+    document.getElementById('count-step').hidden = !hasCount;
+    document.getElementById('count-variance').hidden = !(hasCount && sum.count_variance !== null && sum.count_variance !== undefined);
+    document.getElementById('count-pending').hidden = !(hasCount && (sum.count_variance === null || sum.count_variance === undefined));
 
     const d = dash.data('daily');
     const daily = d.status === 'ok' ? [...d.data].map((r) => ({ ...r, date: String(r.date).slice(0, 10) })).sort((a, b) => (a.date < b.date ? -1 : 1)) : [];
