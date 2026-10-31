@@ -261,6 +261,7 @@ window.dash = (function () {
           <div class="cb-step cb-step-total"><span class="cb-step-op">= Closing book stock, <span data-source="summary" data-field="book_date_label" data-row="0">—</span></span><span class="cb-step-val dash-skeleton" data-source="summary" data-field="book_closing_stock" data-row="0">—</span></div>
           <div class="cb-step cb-step-total" id="count-step" hidden><span class="cb-step-op">Physical closing count, <span data-source="summary" data-field="count_date_label" data-row="0">—</span></span><span class="cb-step-val" data-source="summary" data-field="count_stock" data-row="0">—</span><span class="cb-step-op">Usable <span data-source="summary" data-field="count_usable" data-row="0">—</span> · Dirty <span data-source="summary" data-field="count_dirty" data-row="0">—</span> · Others <span data-source="summary" data-field="count_others" data-row="0">—</span> · On <span data-source="summary" data-field="count_pallets" data-row="0">—</span> pallets awaiting dispatch <span data-source="summary" data-field="count_on_pallets" data-row="0">—</span></span></div>
         </div>
+        <p class="cb-card-note" id="count-note" hidden><span data-source="summary" data-field="count_note" data-row="0">—</span></p>
         <p class="cb-card-note" id="count-variance" hidden>Physical count vs book stock on <span data-source="summary" data-field="count_date_label" data-row="0">—</span>: <span class="cb-num" data-source="summary" data-field="count_variance" data-row="0">—</span> bottles (breakage, cullet and counting differences).</p>
         <p class="cb-card-note" id="count-pending" hidden>The book figure runs to <span data-source="summary" data-field="book_date_label" data-row="0">—</span>, the latest daily production report; the comparison with the <span data-source="summary" data-field="count_date_label" data-row="0">—</span> count appears once that day’s report arrives.</p>
         <p class="cb-card-note">Net stock build this month: <span class="cb-num" data-source="summary" data-field="net_stock_change" data-row="0">—</span> bottles. <span class="cb-pending" id="bridge-pending" hidden>Opening and closing figures appear once the month’s opening count is added.</span></p>
@@ -351,7 +352,8 @@ dash.calc('summary', {
       book_closing_stock: book,
       book_date_label: label(dLastDate),
       has_count: !!cc,
-      count_date_label: cc ? label(ccDate) : null,
+      count_date_label: cc ? label(ccDate) + (cc.count_time ? `, ${cc.count_time}` : '') : null,
+      count_note: cc && cc.note ? String(cc.note) : null,
       count_stock: cc ? +cc.closing_stock_bottles : null,
       count_usable: cc ? +cc.usable : null,
       count_dirty: cc ? +cc.dirty : null,
@@ -633,6 +635,7 @@ dash.calc('daily_running', {
     document.getElementById('tile-stock-count').hidden = !hasCount;
     if (hasCount) document.getElementById('tile-stock-sub').hidden = true;
     document.getElementById('count-step').hidden = !hasCount;
+    document.getElementById('count-note').hidden = !(hasCount && sum.count_note);
     document.getElementById('count-variance').hidden = !(hasCount && sum.count_variance !== null && sum.count_variance !== undefined);
     document.getElementById('count-pending').hidden = !(hasCount && (sum.count_variance === null || sum.count_variance === undefined));
 
