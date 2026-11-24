@@ -190,7 +190,7 @@ window.dash = (function () {
       <span class="cb-progress-mark-label" hidden>Day <span data-source="inward_kpi" data-field="day_of_month" data-row="0">—</span> of <span data-source="inward_kpi" data-field="days_in_month" data-row="0">—</span></span>
     </div>
     <div class="cb-kpi-plan" id="kpi-plan">
-      <span class="cb-kpi-sub">Usable inwarded bottles so far: <span class="cb-num" data-source="inward_kpi" data-field="bottles_inwarded" data-row="0">—</span> (<span class="cb-num" data-source="inward_kpi" data-field="pct_inward_of_plan" data-row="0">—</span>% of plan). <span class="cb-num" data-source="inward_kpi" data-field="pct_fed_of_inward" data-row="0">—</span>% of them are already back on the line on pallets; the rest is in sorting and washing.</span>
+      <span class="cb-kpi-sub">Usable bottles available: <span class="cb-num" data-source="inward_kpi" data-field="bottles_available" data-row="0">—</span> (<span class="cb-num" data-source="inward_kpi" data-field="opening_usable" data-row="0">—</span> usable in the opening stock + <span class="cb-num" data-source="inward_kpi" data-field="bottles_inwarded" data-row="0">—</span> usable inwarded, which is <span class="cb-num" data-source="inward_kpi" data-field="pct_inward_of_plan" data-row="0">—</span>% of plan). <span class="cb-num" data-source="inward_kpi" data-field="pct_fed_of_inward" data-row="0">—</span>% of them are already back on the line on pallets (up to the latest DPR); the rest is in sorting and washing.</span>
     </div>
     <p class="cb-pending" id="kpi-noplan" hidden>The brewery’s plan of old bottles for this month has not been added yet.</p>
   </section>
@@ -368,11 +368,11 @@ dash.calc('summary', {
 });
 
 dash.calc('inward_kpi', {
-  inputs: ['daily', 'inward_plan'],
+  inputs: ['daily', 'inward_plan', 'opening_stock'],
   title: 'Old bottles fed via palletization vs the brewery plan',
-  description: 'Bottles fed = pallets supplied × 1,575 bottles per pallet. Share of plan = bottles fed ÷ old bottles in the brewery’s plan for the month. Share of inward = bottles fed ÷ usable inwarded bottles over the same days. Inward vs plan = usable inwarded bottles ÷ the brewery’s inward plan for the month. Pallets for the full plan = plan ÷ 1,575, rounded up.',
-  fn: (daily, inward_plan) => {
-    const rows = daily.map((r) => ({ date: String(r.date).slice(0, 10), p: +r.pallets_dispatched || 0, b: +r.bottles_inwarded || 0 }))
+  description: 'Bottles fed = pallets supplied × 1,575 bottles per pallet. Share of plan = bottles fed ÷ old bottles in the brewery’s plan for the month. Usable bottles available = usable stock in the opening count for the month + usable inwarded bottles (DPR, after the sampling deduction). Back on the line = bottles fed on DPR days ÷ usable bottles available (provisional days have no bottle count yet, so they are left out of this share). Ready pallets in the opening count are not included. Inward vs plan = usable inwarded bottles ÷ the brewery’s plan for the month. Pallets for the full plan = plan ÷ 1,575, rounded up.',
+  fn: (daily, inward_plan, opening_stock) => {
+    const rows = daily.map((r) => ({ date: String(r.date).slice(0, 10), p: +r.pallets_dispatched || 0, b: +r.bottles_inwarded || 0, prov: !!r.provisional }))
       .sort((a, b) => (a.date < b.date ? -1 : 1));
     if (!rows.length) return [];
     const month = rows[0].date.slice(0, 7);
@@ -381,6 +381,10 @@ dash.calc('inward_kpi', {
     const pallets = rows.reduce((s, r) => s + r.p, 0);
     const inward = rows.reduce((s, r) => s + r.b, 0);
     const fed = pallets * bpp;
+    const fedDpr = rows.filter((r) => !r.prov).reduce((s, r) => s + r.p, 0) * bpp;
+    const os = (opening_stock || []).find((x) => x && String(x.as_of || '').slice(0, 7) === month && x.usable !== null && x.usable !== undefined && x.usable !== '');
+    const openUsable = os ? +os.usable : null;
+    const available = (openUsable || 0) + inward;
     const last = rows[rows.length - 1].date;
     const day = +last.slice(8, 10);
     const dim = new Date(Date.UTC(+last.slice(0, 4), +last.slice(5, 7), 0)).getUTCDate();
@@ -390,7 +394,9 @@ dash.calc('inward_kpi', {
       bottles_fed: fed,
       pallets_mtd: pallets,
       bottles_inwarded: inward,
-      pct_fed_of_inward: inward ? Math.round((fed / inward) * 1000) / 10 : null,
+      opening_usable: openUsable,
+      bottles_available: available,
+      pct_fed_of_inward: available ? Math.round((fedDpr / available) * 1000) / 10 : null,
       plan_bottles: planB,
       pct_inward_of_plan: planB ? Math.round((inward / planB) * 1000) / 10 : null,
       pct_fed_of_plan: planB ? Math.round((fed / planB) * 1000) / 10 : null,
