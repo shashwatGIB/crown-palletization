@@ -11,6 +11,8 @@ html, body { margin: 0; padding: 0; }
 body { background: #F5F3ED; -webkit-text-size-adjust: 100%; }
 @media (prefers-color-scheme: dark) { body { background: #15140F; } }
 .dash-skeleton { }
+.dash-select { appearance: none; -webkit-appearance: none; font: inherit; border: 1px solid #CDC5B4; border-radius: 4px; padding: 6px 30px 6px 10px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238E6F22'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; cursor: pointer; }
+@media print { .cb-monthpick { display: none !important; } }
 @media print {
   @page { size: A4; margin: 8mm; }
   html, body { background: #F5F3ED !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -29,7 +31,7 @@ body { background: #F5F3ED; -webkit-text-size-adjust: 100%; }
 <script>
 window.dash = (function () {
   let sets = {};
-  const calcs = {}, cache = {}, fns = [];
+  const calcs = {}, cache = {}, fns = [], params = {};
   function data(id) {
     if (Object.prototype.hasOwnProperty.call(sets, id)) {
       const rows = sets[id];
@@ -50,7 +52,7 @@ window.dash = (function () {
     onData: (fn) => { fns.push(fn); },
     colors: ['#A8852F', '#3A3833'],
     refresh: () => {},
-    params: () => ({}), setParams: () => {}, resetParams: () => {}, setLink: () => {},
+    params: () => Object.assign({}, params), setParams: (o) => { Object.assign(params, o || {}); Object.keys(cache).forEach((k) => delete cache[k]); fns.forEach((f) => f()); }, resetParams: () => { Object.keys(params).forEach((k) => delete params[k]); }, setLink: () => {},
     _set: (d) => { sets = d; Object.keys(cache).forEach((k) => delete cache[k]); },
     _run: () => fns.forEach((f) => f())
   };
@@ -99,6 +101,9 @@ window.dash = (function () {
 .cb-title em { font-style: normal; color: var(--cb-gold); }
 .cb-byline { margin: -2px 0 0; font-size: 16px; color: var(--cb-body); line-height: 1.5; }
 .cb-byline strong { color: var(--cb-ink); font-weight: 700; }
+.cb-monthpick { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 2px 0 0; }
+.cb-monthpick label { font-family: var(--cb-sans); font-weight: 700; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--cb-gold-text); }
+.cb-monthpick .dash-select { min-width: 180px; background-color: var(--cb-card); color: var(--cb-ink); font-size: 14px; }
 .cb-lede { margin: 0; font-size: 15px; color: var(--cb-body); max-width: 72ch; line-height: 1.6; }
 .cb-lede .cb-num { color: var(--cb-ink); font-weight: 700; }
 
@@ -170,6 +175,8 @@ window.dash = (function () {
     <p class="cb-eyebrow">As on <span class="dash-skeleton" data-source="summary" data-field="as_on_label" data-row="0">—</span></p>
     <h1 class="cb-title"><em>Crown Brewery</em> Palletization</h1>
     <p class="cb-byline">In partnership with <strong>InfinityBox</strong></p>
+    <div class="cb-monthpick" id="month-pick"><label for="month-select">Month</label><select class="dash-select" id="month-select" data-source="month_list" aria-label="Month shown"></select></div>
+    <p class="cb-pending" id="prov-note" hidden><span data-source="summary" data-field="provisional_note" data-row="0">—</span></p>
     <p class="cb-lede" id="lede">
       <span class="cb-num dash-skeleton" data-source="inward_kpi" data-field="bottles_fed" data-row="0">—</span> old bottles fed to the bottling line via palletization from <span data-source="summary" data-field="range_label" data-row="0">—</span><span id="lede-plan">:
       <span class="cb-num dash-skeleton" data-source="inward_kpi" data-field="pct_fed_of_plan" data-row="0">—</span>% of the brewery’s plan of <span class="cb-num" data-source="inward_kpi" data-field="plan_bottles" data-row="0">—</span> for the month</span>. Best day so far:
@@ -182,7 +189,7 @@ window.dash = (function () {
     <span class="cb-tile-label">Old bottles fed to the line via palletization, as a share of the brewery’s plan for <span data-source="summary" data-field="month_label" data-row="0">—</span> · <span data-source="summary" data-field="range_label" data-row="0">—</span></span>
     <div class="cb-kpi-main" id="kpi-main">
       <span class="cb-kpi-val"><span class="dash-skeleton" data-source="inward_kpi" data-field="pct_fed_of_plan" data-row="0">—</span>%</span>
-      <span class="cb-kpi-sub"><span class="cb-num" data-source="inward_kpi" data-field="bottles_fed" data-row="0">—</span> old bottles fed on <span class="cb-num" data-source="inward_kpi" data-field="pallets_mtd" data-row="0">—</span> pallets of 1,575, out of <span class="cb-num" data-source="inward_kpi" data-field="plan_bottles" data-row="0">—</span> old bottles planned for the month. The full plan is about <span class="cb-num" data-source="inward_kpi" data-field="pallets_for_plan" data-row="0">—</span> pallets.</span>
+      <span class="cb-kpi-sub"><span class="cb-num" data-source="inward_kpi" data-field="bottles_fed" data-row="0">—</span> old bottles fed on <span class="cb-num" data-source="inward_kpi" data-field="pallets_mtd" data-row="0">—</span> pallets × 1,575 bottles each, out of <span class="cb-num" data-source="inward_kpi" data-field="plan_bottles" data-row="0">—</span> old bottles planned for the month. The full plan is about <span class="cb-num" data-source="inward_kpi" data-field="pallets_for_plan" data-row="0">—</span> pallets.</span>
     </div>
     <div class="cb-progress dash-skeleton" id="kpi-bar" data-source="inward_kpi" role="img" aria-label="Old bottles fed via palletization against the month’s plan, with days of the month gone">
       <div class="cb-progress-fill"></div>
@@ -203,15 +210,15 @@ window.dash = (function () {
       <span class="cb-tile-sub">Bottles palletized: <span class="cb-num" data-source="summary" data-field="bottles_on_pallets_mtd" data-row="0">—</span></span>
     </div>
     <div class="cb-tile">
-      <span class="cb-tile-label">Usable inwarded bottles · <span data-source="summary" data-field="range_label" data-row="0">—</span></span>
+      <span class="cb-tile-label">Usable inwarded bottles · <span data-source="summary" data-field="dpr_range_label" data-row="0">—</span></span>
       <span class="cb-tile-val dash-skeleton" data-source="summary" data-field="bottles_inwarded_mtd" data-row="0">—</span>
-      <span class="cb-tile-sub">From <span class="cb-num" data-source="summary" data-field="vehicles_mtd" data-row="0">—</span> trucks this month · <span class="cb-num" data-source="summary" data-field="trucks_last_day" data-row="0">—</span> trucks on <span data-source="summary" data-field="last_date_label" data-row="0">—</span></span>
+      <span class="cb-tile-sub">From <span class="cb-num" data-source="summary" data-field="vehicles_mtd" data-row="0">—</span> trucks · <span class="cb-num" data-source="summary" data-field="trucks_last_day" data-row="0">—</span> trucks on <span data-source="summary" data-field="last_date_label" data-row="0">—</span></span>
       <span class="cb-tile-sub" id="unload-line">Average unloading time: <span class="cb-num" data-source="unloading_kpi" data-field="avg_unloading_minutes" data-row="0">—</span> mins</span>
     </div>
     <div class="cb-tile">
       <span class="cb-tile-label"><span id="tile-stock-kind">Closing book stock</span> on <span data-source="summary" data-field="stock_date_label" data-row="0">—</span> · bottles</span>
       <span class="cb-tile-val dash-skeleton" data-source="summary" data-field="closing_stock" data-row="0">—</span>
-      <span class="cb-tile-sub" id="tile-stock-sub">Opening <span class="cb-num" data-source="summary" data-field="opening_stock" data-row="0">—</span> on <span data-source="summary" data-field="first_date_label" data-row="0">—</span></span>
+      <span class="cb-tile-sub" id="tile-stock-sub">Opening <span class="cb-num" data-source="summary" data-field="opening_stock" data-row="0">—</span> on <span data-source="summary" data-field="first_date_label" data-row="0">—</span>: joint count by IB and the brewery, <span data-source="opening_month" data-field="count_when" data-row="0">—</span><br>Usable <span class="cb-num" data-source="opening_month" data-field="usable" data-row="0">—</span> · Dirty <span class="cb-num" data-source="opening_month" data-field="dirty" data-row="0">—</span> · Other brands <span class="cb-num" data-source="opening_month" data-field="others_total" data-row="0">—</span></span>
       <span class="cb-pending" id="tile-stock-pending" hidden>Waiting for the opening stock count</span>
       <span class="cb-tile-sub" id="tile-stock-count" hidden>Physical count by IB and the brewery · Book figure to <span data-source="summary" data-field="book_date_label" data-row="0">—</span>: <span class="cb-num" data-source="summary" data-field="book_closing_stock" data-row="0">—</span></span>
     </div>
@@ -229,7 +236,7 @@ window.dash = (function () {
       <div class="cb-card">
         <h3 class="cb-card-title">Pallets dispatched per day</h3>
         <p class="cb-card-note">7-layer pallets of 1,575 bottles, sent in trips of 8. Gaps are dry days, Sundays and brewery non-production days.</p>
-        <div class="cb-chart dash-skeleton" id="ch-pallets" data-source="daily"></div>
+        <div class="cb-chart dash-skeleton" id="ch-pallets" data-source="daily_month"></div>
       </div>
       <div class="cb-card">
         <h3 class="cb-card-title">Pallets supplied, running total</h3>
@@ -244,7 +251,7 @@ window.dash = (function () {
     <div class="cb-card">
       <h3 class="cb-card-title">Usable inwarded bottles per day</h3>
       <p class="cb-card-note">From the daily production report: truck weight ÷ 0.390 kg per bottle, less 5%.</p>
-      <div class="cb-chart dash-skeleton" id="ch-inward" data-source="daily"></div>
+      <div class="cb-chart dash-skeleton" id="ch-inward" data-source="daily_month"></div>
     </div>
   </section>
 
@@ -255,7 +262,7 @@ window.dash = (function () {
         <h3 class="cb-card-title">Bottle stock at the warehouse</h3>
         <p class="cb-card-note">Book stock = opening stock at the start of the month + usable inwarded bottles − bottles supplied on pallets. It includes other-brand and dirty bottles awaiting sorting. Breakage and cullet are not deducted, so a physical count comes in lower. Where a physical count has been taken jointly with the brewery, the closing stock shown is that count.</p>
         <div class="cb-bridge">
-          <div class="cb-step"><span class="cb-step-op">Opening stock, <span data-source="summary" data-field="first_date_label" data-row="0">—</span></span><span class="cb-step-val dash-skeleton" data-source="summary" data-field="opening_stock" data-row="0">—</span><span class="cb-step-op">Usable <span data-source="opening_stock" data-field="usable" data-row="0">—</span> · Dirty <span data-source="opening_stock" data-field="dirty" data-row="0">—</span> · Others <span data-source="opening_stock" data-field="others_total" data-row="0">—</span></span></div>
+          <div class="cb-step"><span class="cb-step-op">Opening stock, <span data-source="summary" data-field="first_date_label" data-row="0">—</span></span><span class="cb-step-val dash-skeleton" data-source="summary" data-field="opening_stock" data-row="0">—</span><span class="cb-step-op">Usable <span data-source="opening_month" data-field="usable" data-row="0">—</span> · Dirty <span data-source="opening_month" data-field="dirty" data-row="0">—</span> · Others <span data-source="opening_month" data-field="others_total" data-row="0">—</span></span></div>
           <div class="cb-step"><span class="cb-step-op">+ Usable inwarded</span><span class="cb-step-val dash-skeleton" data-source="summary" data-field="bottles_inwarded_mtd" data-row="0">—</span></div>
           <div class="cb-step"><span class="cb-step-op">− Supplied on pallets</span><span class="cb-step-val dash-skeleton" data-source="summary" data-field="bottles_on_pallets_mtd" data-row="0">—</span></div>
           <div class="cb-step cb-step-total"><span class="cb-step-op">= Closing book stock, <span data-source="summary" data-field="book_date_label" data-row="0">—</span></span><span class="cb-step-val dash-skeleton" data-source="summary" data-field="book_closing_stock" data-row="0">—</span></div>
@@ -269,7 +276,7 @@ window.dash = (function () {
       <div class="cb-card">
         <h3 class="cb-card-title">Cullet lifted</h3>
         <p class="cb-card-note">Broken glass (cullet) picked up from the warehouse, by weight, as recorded in the daily production report.</p>
-        <ul class="cb-cullet-list" id="cullet-list" data-source="daily"></ul>
+        <ul class="cb-cullet-list" id="cullet-list" data-source="daily_month"></ul>
       </div>
     </div>
   </section>
@@ -279,7 +286,7 @@ window.dash = (function () {
     <div class="cb-card">
       <p class="cb-card-note">One row per day, newest first, from the daily production report (DPR).</p>
       <div class="cb-tablewrap">
-        <table class="cb-table" id="tbl-daily" data-source="daily" data-row-key="date">
+        <table class="cb-table" id="tbl-daily" data-source="daily_month" data-row-key="date">
           <thead><tr>
             <th data-field="date">Date</th>
             <th data-field="pallets_dispatched">Pallets supplied</th>
@@ -300,32 +307,80 @@ window.dash = (function () {
 </div>
 
 <script>
+dash.calc('daily_month', {
+  inputs: ['daily', 'daily_history'],
+  title: 'Daily rows for the month shown',
+  description: 'The daily production report rows for the month picked at the top of the page. The current month comes from the latest DPR (with any provisional WhatsApp days); earlier months come from the final DPR of that month, kept in the earlier-months file. Where a month is in both, the latest DPR rows are used. With no month picked, the latest month is shown.',
+  fn: (daily, daily_history) => {
+    const norm = (r) => ({ ...r, date: String(r.date).slice(0, 10) });
+    const cur = (daily || []).map(norm);
+    const curMonths = new Set(cur.map((r) => r.date.slice(0, 7)));
+    const all = cur.concat((Array.isArray(daily_history) ? daily_history : []).map(norm).filter((r) => !curMonths.has(r.date.slice(0, 7))));
+    if (!all.length) return [];
+    const months = [...new Set(all.map((r) => r.date.slice(0, 7)))].sort();
+    const want = String((dash.params() || {}).month || '');
+    const m = months.includes(want) ? want : months[months.length - 1];
+    return all.filter((r) => r.date.slice(0, 7) === m).sort((a, b) => (a.date < b.date ? -1 : 1));
+  }
+});
+
+dash.calc('month_list', {
+  inputs: ['daily', 'daily_history'],
+  title: 'Months available',
+  description: 'Every month with daily production report rows, newest first: the current month from the latest DPR and earlier months from the earlier-months file.',
+  fn: (daily, daily_history) => {
+    const full = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const all = (daily || []).concat(Array.isArray(daily_history) ? daily_history : []);
+    const months = [...new Set(all.map((r) => String(r.date).slice(0, 7)))].filter((m) => /^\d{4}-\d{2}$/.test(m)).sort().reverse();
+    return months.map((m, i) => ({ month: m, month_label: `${full[+m.slice(5, 7) - 1]} ${m.slice(0, 4)}`, latest: i === 0 }));
+  }
+});
+
+dash.calc('opening_month', {
+  inputs: ['opening_stock', 'daily_month'],
+  title: 'Opening stock count for the month shown',
+  description: 'The physical count at the start of the month shown, from the stock counts (the row whose as_of date falls in that month and that has an opening figure).',
+  fn: (opening_stock, daily_month) => {
+    const mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const month = daily_month.length ? String(daily_month[0].date).slice(0, 7) : null;
+    const os = (opening_stock || []).find((x) => x && String(x.as_of || '').slice(0, 7) === month && x.opening_stock_bottles !== null && x.opening_stock_bottles !== undefined && x.opening_stock_bottles !== '');
+    if (!os) return [];
+    const cd = String(os.count_date || '');
+    const when = /^\d{4}-\d{2}-\d{2}/.test(cd) ? `${+cd.slice(8, 10)} ${mon[+cd.slice(5, 7) - 1]}${os.count_time ? `, ${os.count_time}` : ''}` : (os.count_time || '');
+    return [{ as_of: String(os.as_of).slice(0, 10), opening_stock_bottles: +os.opening_stock_bottles, count_when: when,
+      usable: os.usable === undefined ? null : +os.usable, dirty: os.dirty === undefined ? null : +os.dirty, others_total: os.others_total === undefined ? null : +os.others_total }];
+  }
+});
+
 dash.calc('summary', {
-  inputs: ['daily', 'opening_stock'],
+  inputs: ['daily_month', 'opening_stock'],
   title: 'Month-to-date totals',
-  description: 'Totals over the daily site reports for the month shown. The opening stock applies only when its date is in that month. Bottles on pallets = pallets × 1,575 (7-layer pallet). Book stock = opening + usable inwarded bottles − bottles on pallets (DPR days). Closing stock = the physical count (rows with count_type closing in the stock counts) when one was taken that month, otherwise the book stock. Count vs book is shown only when the DPR runs to the count date.',
+  description: 'Totals over the daily site reports for the month shown. Days after the latest DPR are provisional (pallets from the site’s evening WhatsApp report, trucks from its vehicle slips) until the DPR replaces them; usable bottles, trucks counted for inward, and closing stock use DPR days only. The opening stock applies only when its date is in that month. Bottles on pallets = pallets × 1,575 (7-layer pallet). Book stock = opening + usable inwarded bottles − bottles on pallets (DPR days). Closing stock = the physical count (rows with count_type closing in the stock counts) when one was taken that month, otherwise the book stock. Count vs book is shown only when the DPR runs to the count date.',
   fn: (daily, opening_stock) => {
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const ord = (n) => n + ((n % 100 >= 11 && n % 100 <= 13) ? 'th' : (['th', 'st', 'nd', 'rd'][n % 10] || 'th'));
     const label = (d) => { const p = String(d).slice(0, 10).split('-'); return `${+p[2]} ${months[+p[1] - 1]}`; };
-    const rows = daily.map((r) => ({ date: String(r.date).slice(0, 10), p: +r.pallets_dispatched || 0, b: +r.bottles_inwarded || 0, v: +r.vehicles_inwarded || 0, c: +r.cullet_kg || 0 }))
+    const rows = daily.map((r) => ({ date: String(r.date).slice(0, 10), p: +r.pallets_dispatched || 0, b: +r.bottles_inwarded || 0, v: +r.vehicles_inwarded || 0, c: +r.cullet_kg || 0, prov: !!r.provisional }))
       .sort((a, b) => (a.date < b.date ? -1 : 1));
     if (!rows.length) return [];
     const last = rows[rows.length - 1];
+    const dprRows = rows.filter((r) => !r.prov);
+    const provRows = rows.filter((r) => r.prov);
+    const dLast = dprRows.length ? dprRows[dprRows.length - 1] : rows[0];
+    const dprOnPallets = dprRows.reduce((s, r) => s + r.p, 0) * 1575;
+    const provNote = provRows.length
+      ? `${provRows.length === 1 ? label(provRows[0].date) : `${+provRows[0].date.slice(8, 10)}–${label(provRows[provRows.length - 1].date)}`}: provisional figures from the site’s WhatsApp reports (pallets and trucks only). ${dprRows.length ? `The daily production report runs to ${label(dLast.date)}; these days are replaced when it arrives.` : 'The daily production report for this month has not arrived yet; these days are replaced when it does.'}`
+      : '';
     const pallets = rows.reduce((s, r) => s + r.p, 0);
     const inward = rows.reduce((s, r) => s + r.b, 0);
     const days = rows.filter((r) => r.p > 0).length;
     const peak = rows.reduce((m, r) => (r.p > m.p ? r : m), rows[0]);
     const first = rows[0];
     const fullMonths = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-    const os = opening_stock.length ? opening_stock[0] : null;
-    const sameMonth = !!os && String(os.as_of || '').slice(0, 7) === first.date.slice(0, 7);
-    const o = sameMonth ? os.opening_stock_bottles : null;
+    const os = opening_stock.find((x) => x && String(x.as_of || '').slice(0, 7) === first.date.slice(0, 7) && x.opening_stock_bottles !== null && x.opening_stock_bottles !== undefined && x.opening_stock_bottles !== '');
+    const o = os ? os.opening_stock_bottles : null;
     const opening = o === null || o === undefined || o === '' ? null : +o;
     const onPallets = pallets * 1575;
-    const dprRows = daily.filter((x) => !x.provisional).map((x) => ({ date: String(x.date).slice(0, 10), p: +x.pallets_dispatched || 0 })).sort((a, b) => (a.date < b.date ? -1 : 1));
-    const dLastDate = dprRows.length ? dprRows[dprRows.length - 1].date : first.date;
-    const dprOnPallets = dprRows.reduce((s, x) => s + x.p, 0) * 1575;
     const cc = opening_stock.find((x) => x && x.count_type === 'closing' && String(x.count_date || '').slice(0, 7) === first.date.slice(0, 7) && x.closing_stock_bottles !== null && x.closing_stock_bottles !== undefined && x.closing_stock_bottles !== '');
     const book = opening === null ? null : opening + inward - dprOnPallets;
     const ccDate = cc ? String(cc.count_date).slice(0, 10) : null;
@@ -344,13 +399,13 @@ dash.calc('summary', {
       peak_date_label: label(peak.date),
       bottles_inwarded_mtd: inward,
       bottles_inwarded_last_day: last.b,
-      vehicles_mtd: rows.reduce((s, r) => s + r.v, 0),
+      vehicles_mtd: dprRows.reduce((s, r) => s + r.v, 0),
       bottles_on_pallets_mtd: onPallets,
-      net_stock_change: inward - onPallets,
+      net_stock_change: inward - dprOnPallets,
       opening_stock: opening,
       closing_stock: cc ? +cc.closing_stock_bottles : book,
       book_closing_stock: book,
-      book_date_label: label(dLastDate),
+      book_date_label: label(dLast.date),
       has_count: !!cc,
       count_date_label: cc ? label(ccDate) + (cc.count_time ? `, ${cc.count_time}` : '') : null,
       count_note: cc && cc.note ? String(cc.note) : null,
@@ -360,15 +415,17 @@ dash.calc('summary', {
       count_others: cc ? +cc.others_total : null,
       count_pallets: cc ? +cc.pallets_ready : null,
       count_on_pallets: cc ? +cc.bottles_on_ready_pallets : null,
-      count_variance: cc && book !== null && dLastDate === ccDate ? +cc.closing_stock_bottles - book : null,
-      stock_date_label: cc ? label(ccDate) : label(dLastDate),
+      count_variance: cc && book !== null && dLast.date === ccDate ? +cc.closing_stock_bottles - book : null,
+      dpr_range_label: dprRows.length ? `${+first.date.slice(8, 10)}–${label(dLast.date)}` : 'DPR pending',
+      stock_date_label: cc ? label(ccDate) : label(dLast.date),
+      provisional_note: provNote,
       cullet_kg_mtd: rows.reduce((s, r) => s + r.c, 0)
     }];
   }
 });
 
 dash.calc('inward_kpi', {
-  inputs: ['daily', 'inward_plan', 'opening_stock'],
+  inputs: ['daily_month', 'inward_plan', 'opening_stock'],
   title: 'Old bottles fed via palletization vs the brewery plan',
   description: 'Bottles fed = pallets supplied × 1,575 bottles per pallet. Share of plan = bottles fed ÷ old bottles in the brewery’s plan for the month. Usable bottles available = usable stock in the opening count for the month + usable inwarded bottles (DPR, after the sampling deduction). Back on the line = bottles fed on DPR days ÷ usable bottles available (provisional days have no bottle count yet, so they are left out of this share). Ready pallets in the opening count are not included. Inward vs plan = usable inwarded bottles ÷ the brewery’s plan for the month. Pallets for the full plan = plan ÷ 1,575, rounded up.',
   fn: (daily, inward_plan, opening_stock) => {
@@ -409,7 +466,7 @@ dash.calc('inward_kpi', {
 });
 
 dash.calc('unloading_kpi', {
-  inputs: ['daily', 'unloading'],
+  inputs: ['daily_month', 'unloading'],
   title: 'Average truck unloading time',
   description: 'Average minutes to unload an old-bottle truck at the warehouse in the month shown.',
   fn: (daily, unloading) => {
@@ -420,25 +477,23 @@ dash.calc('unloading_kpi', {
 });
 
 dash.calc('daily_running', {
-  inputs: ['daily', 'opening_stock'],
+  inputs: ['daily_month', 'opening_stock'],
   title: 'Running totals by day',
-  description: 'Per day: pallets month to date, bottles on pallets (pallets × 1,575) and closing stock (previous closing + usable inwarded bottles − bottles on pallets).',
+  description: 'Per day: pallets month to date, bottles on pallets (pallets × 1,575) and closing stock (previous closing + usable inwarded bottles − bottles on pallets). Closing stock is left blank on provisional days until the DPR arrives; on a day with a physical closing count, closing stock is that count.',
   fn: (daily, opening_stock) => {
-    const rows = daily.map((r) => ({ date: String(r.date).slice(0, 10), p: +r.pallets_dispatched || 0, b: +r.bottles_inwarded || 0 }))
+    const rows = daily.map((r) => ({ date: String(r.date).slice(0, 10), p: +r.pallets_dispatched || 0, b: +r.bottles_inwarded || 0, prov: !!r.provisional }))
       .sort((a, b) => (a.date < b.date ? -1 : 1));
-    const os = opening_stock.length ? opening_stock[0] : null;
-    const sameMonth = !!os && rows.length > 0 && String(os.as_of || '').slice(0, 7) === rows[0].date.slice(0, 7);
-    const o = sameMonth ? os.opening_stock_bottles : null;
+    const os = rows.length ? opening_stock.find((x) => x && String(x.as_of || '').slice(0, 7) === rows[0].date.slice(0, 7) && x.opening_stock_bottles !== null && x.opening_stock_bottles !== undefined && x.opening_stock_bottles !== '') : null;
+    const o = os ? os.opening_stock_bottles : null;
     let stock = o === null || o === undefined || o === '' ? null : +o;
     let mtd = 0;
     const counts = new Map(opening_stock.filter((x) => x && x.count_type === 'closing' && x.closing_stock_bottles !== null && x.closing_stock_bottles !== undefined && x.closing_stock_bottles !== '').map((x) => [String(x.count_date).slice(0, 10), +x.closing_stock_bottles]));
-    const prov = new Set(daily.filter((x) => x.provisional).map((x) => String(x.date).slice(0, 10)));
     return rows
       .map((r) => {
         const out = r.p * 1575;
         mtd += r.p;
         if (counts.has(r.date)) { stock = counts.get(r.date); return { date: r.date, pallets_mtd: mtd, bottles_on_pallets: out, closing_stock: stock }; }
-        if (prov.has(r.date)) return { date: r.date, pallets_mtd: mtd, bottles_on_pallets: out, closing_stock: null };
+        if (r.prov) return { date: r.date, pallets_mtd: mtd, bottles_on_pallets: out, closing_stock: null };
         stock = stock === null ? null : stock + r.b - out;
         return { date: r.date, pallets_mtd: mtd, bottles_on_pallets: out, closing_stock: stock };
       });
@@ -621,10 +676,35 @@ dash.calc('daily_running', {
     }
   }
 
+  function drawMonthPicker() {
+    const sel = document.getElementById('month-select');
+    const ml = dash.data('month_list');
+    const dm = dash.data('daily_month');
+    if (ml.status !== 'ok' || !ml.data || !ml.data.length) return;
+    const shown = dm.status === 'ok' && dm.data && dm.data.length ? String(dm.data[0].date).slice(0, 7) : ml.data[0].month;
+    if (document.activeElement !== sel) {
+      const key = ml.data.map((r) => r.month).join(',');
+      if (sel.dataset.key !== key) {
+        sel.textContent = '';
+        ml.data.forEach((r) => { const o = document.createElement('option'); o.value = r.month; o.textContent = r.month_label + (r.latest ? ' (current)' : ''); sel.appendChild(o); });
+        sel.dataset.key = key;
+      }
+      sel.value = shown;
+    }
+    if (!sel.dataset.bound) {
+      sel.dataset.bound = '1';
+      sel.addEventListener('change', () => {
+        const latest = (dash.data('month_list').data || [])[0];
+        dash.setParams({ month: latest && sel.value === latest.month ? '' : sel.value });
+      });
+    }
+  }
+
   dash.onData(() => {
     const colors = ['var(--cb-gold)', 'var(--cb-chart-2)'];
     const s = fillMarks('summary', (v, f) => (typeof v === 'number' ? fmt.format(v) : String(v)));
-    fillMarks('opening_stock', (v) => (typeof v === 'number' ? fmt.format(v) : String(v)));
+    fillMarks('opening_month', (v) => (typeof v === 'number' ? fmt.format(v) : String(v)));
+    drawMonthPicker();
     const un = fillMarks('unloading_kpi', (v) => (typeof v === 'number' ? fmt.format(v) : String(v)));
     document.getElementById('unload-line').hidden = un.status === 'ok' && !(un.data && un.data[0] && un.data[0].avg_unloading_minutes !== null);
     drawKpi(fillMarks('inward_kpi', (v) => (typeof v === 'number' ? fmt.format(v) : String(v))));
@@ -644,23 +724,25 @@ dash.calc('daily_running', {
     document.getElementById('count-note').hidden = !(hasCount && sum.count_note);
     document.getElementById('count-variance').hidden = !(hasCount && sum.count_variance !== null && sum.count_variance !== undefined);
     document.getElementById('count-pending').hidden = !(hasCount && (sum.count_variance === null || sum.count_variance === undefined));
+    document.getElementById('prov-note').hidden = !(sum && sum.provisional_note);
 
-    const d = dash.data('daily');
+    const d = dash.data('daily_month');
     const daily = d.status === 'ok' ? [...d.data].map((r) => ({ ...r, date: String(r.date).slice(0, 10) })).sort((a, b) => (a.date < b.date ? -1 : 1)) : [];
 
     const chP = document.getElementById('ch-pallets');
     const chI = document.getElementById('ch-inward');
     if (d.status === 'ok' && daily.length) {
+      const provSet = new Set(daily.filter((r) => r.provisional).map((r) => r.date));
       barChart(chP, daily.map((r) => ({ date: r.date, v: +r.pallets_dispatched || 0 })), {
         label: 'Pallets dispatched per day', color: colors[0], fmtTick: (t) => fmt.format(t), valueLabel: (v) => fmt.format(v),
-        tipLines: (r) => [r.v > 0 ? `${fmt.format(r.v)} pallets supplied` : 'No dispatch']
+        tipLines: (r) => [r.v > 0 ? `${fmt.format(r.v)} pallets supplied` : 'No dispatch'].concat(provSet.has(r.date) ? ['Provisional: site WhatsApp report, DPR pending'] : [])
       });
       const vmap = new Map(daily.map((r) => [r.date, +r.vehicles_inwarded || 0]));
       const kmap = new Map(daily.map((r) => [r.date, +r.inward_kg || 0]));
       const pmap = new Map(daily.map((r) => [r.date, !!r.provisional]));
       barChart(chI, daily.map((r) => ({ date: r.date, v: +r.bottles_inwarded || 0 })), {
         label: 'Usable inwarded bottles per day', color: colors[1], fmtTick: (t) => compact.format(t), valueLabel: null,
-        tipLines: (r) => (r.v > 0 ? [`${fmt.format(r.v)} usable inwarded bottles`, `${vmap.get(r.date)} trucks${kmap.get(r.date) ? ` · ${fmt.format(kmap.get(r.date))} kg` : ''}`].concat(pmap.get(r.date) ? ['Provisional: from vehicle slips, DPR pending'] : []) : ['No trucks received'])
+        tipLines: (r) => (pmap.get(r.date) ? [`${vmap.get(r.date)} trucks received (site WhatsApp slips)`, 'Provisional: usable bottles appear when the DPR arrives'] : r.v > 0 ? [`${fmt.format(r.v)} usable inwarded bottles`, `${vmap.get(r.date)} trucks${kmap.get(r.date) ? ` · ${fmt.format(kmap.get(r.date))} kg` : ''}`] : ['No trucks received'])
       });
     } else if (d.status === 'error' || d.status === 'connect' || d.status === 'declined' || d.status === 'missing') {
       failed(chP); failed(chI);
@@ -709,9 +791,9 @@ dash.calc('daily_running', {
           fmt.format(+r.pallets_dispatched || 0),
           x.pallets_mtd === undefined ? '—' : fmt.format(x.pallets_mtd),
           fmt.format(+r.vehicles_inwarded || 0),
-          fmt.format(+r.bottles_inwarded || 0),
+          r.provisional ? 'DPR pending' : fmt.format(+r.bottles_inwarded || 0),
           x.bottles_on_pallets === undefined ? '—' : fmt.format(x.bottles_on_pallets),
-          fmt.format(+r.cullet_kg || 0),
+          r.provisional ? 'DPR pending' : fmt.format(+r.cullet_kg || 0),
           x.closing_stock === null || x.closing_stock === undefined ? '—' : fmt.format(x.closing_stock)
         ];
         cells.forEach((v) => { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); });
@@ -722,14 +804,13 @@ dash.calc('daily_running', {
   });
 })();
 </script>
-
 </div>
 <script>
 (function () {
   let t = null, w = window.innerWidth;
-  fetch('data.json?t=' + Date.now(), { cache: 'no-store' })
-    .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
-    .then((d) => { dash._set({ daily: d.daily, opening_stock: d.opening_stock, inward_plan: d.inward_plan, unloading: d.unloading }); dash._run(); })
+  const get = (u) => fetch(u + '?t=' + Date.now(), { cache: 'no-store' }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
+  Promise.all([get('data.json'), get('history.json').catch(() => ({ daily: [] }))])
+    .then(([d, h]) => { dash._set({ daily: d.daily, daily_history: (h && Array.isArray(h.daily)) ? h.daily : [], opening_stock: d.opening_stock, inward_plan: d.inward_plan, unloading: d.unloading }); dash._run(); })
     .catch(() => { const e = document.querySelector('.cb-eyebrow'); if (e) e.textContent = 'Could not load the latest figures. Please refresh the page.'; });
   window.addEventListener('resize', () => { if (window.innerWidth === w) return; w = window.innerWidth; clearTimeout(t); t = setTimeout(dash._run, 120); });
   window.addEventListener('beforeprint', () => dash._run());
